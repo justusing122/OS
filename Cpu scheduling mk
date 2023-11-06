@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Process
+{
+    int pid;             // Process ID
+    int arrival_time;    // Arrival time
+    int burst_time;      // Burst time
+    int remaining_time;  // Remaining time
+    int completion_time; // Completion time
+    int waiting_time;    // Waiting time
+    int turnaround_time; // Turnaround time
+    int is_completed;    // Flag to track if the process is completed
+};
+
+// Function to perform Shortest Job First (SJF) Preemptive Scheduling
+void sjf_preemptive(struct Process processes[], int n)
+{
+    int time = 0;      // Current time
+    int completed = 0; // Number of completed processes
+
+    while (completed < n)
+    {
+        int min_pid = -1;        // Process with the shortest remaining time
+        int min_time = 21995625; // Shortest remaining time
+
+        for (int i = 0; i < n; i++)
+        {
+            if (processes[i].arrival_time <= time && processes[i].burst_time > 0)
+            {
+                if (processes[i].burst_time < min_time)
+                {
+                    min_time = processes[i].burst_time;
+                    min_pid = i;
+                }
+            }
+        }
+
+        if (min_pid == -1)
+        {
+            time++;
+        }
+        else
+        {
+            processes[min_pid].burst_time--;
+            time++;
+            if (processes[min_pid].burst_time == 0)
+            {
+                completed++;
+                processes[min_pid].completion_time = time;
+                processes[min_pid].turnaround_time = processes[min_pid].completion_time - processes[min_pid].arrival_time;
+                processes[min_pid].waiting_time = processes[min_pid].turnaround_time - processes[min_pid].burst_time;
+            }
+        }
+    }
+
+    printf("SJF Preemptive Scheduling:\n");
+    printf("Process\tArrival Time\tBurst Time\tCompletion Time\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++)
+    {
+        printf("%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].pid, processes[i].arrival_time,
+               processes[i].remaining_time, processes[i].completion_time, processes[i].waiting_time,
+               processes[i].turnaround_time);
+    }
+}
+
+// Function to perform Round Robin Scheduling
+void round_robin(struct Process processes[], int n, int quantum)
+{
+    int time = 0;      // Current time
+    int completed = 0; // Number of completed processes
+
+    while (completed < n)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            if (processes[i].arrival_time <= time && processes[i].burst_time > 0)
+            {
+                if (processes[i].burst_time <= quantum)
+                {
+                    time += processes[i].burst_time;
+                    processes[i].burst_time = 0;
+                    completed++;
+                    processes[i].completion_time = time;
+                    processes[i].turnaround_time = processes[i].completion_time - processes[i].arrival_time;
+                    processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+                }
+                else
+                {
+                    time += quantum;
+                    processes[i].burst_time -= quantum;
+                }
+            }
+        }
+    }
+    
+    printf("Round Robin Scheduling:\n");
+    printf("Process\tArrival Time\tBurst Time\tCompletion Time\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++)
+    {
+        printf("%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].pid, processes[i].arrival_time,
+               processes[i].remaining_time, processes[i].completion_time, processes[i].waiting_time,
+               processes[i].turnaround_time);
+    }
+}
+
+int main()
+{
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process processes[n];
+
+    printf("Enter arrival times and burst times for each process:\n");
+    for (int i = 0; i < n; i++)
+    {
+        processes[i].pid = i + 1;
+        scanf("%d %d", &processes[i].arrival_time, &processes[i].burst_time);
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+    // Sort the processes based on arrival time (optional)
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int j = 0; j < n - i - 1; j++)
+        {
+            if (processes[j].arrival_time > processes[j + 1].arrival_time)
+            {
+                struct Process temp = processes[j];
+                processes[j] = processes[j + 1];
+                processes[j + 1] = temp;
+            }
+        }
+    }
+
+    sjf_preemptive(processes, n);
+
+	for (int i = 0; i < n; i++)
+	{
+		processes[i].burst_time=processes[i].remaining_time;
+	}
+	
+    int quantum;
+    printf("\nEnter time quantum for Round Robin Scheduling: ");
+    scanf("%d", &quantum);
+    round_robin(processes, n, quantum);
+
+    return 0;
+}
